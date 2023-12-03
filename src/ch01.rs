@@ -1,4 +1,4 @@
-fn get_data_01_1() -> Vec<String> {
+fn get_data() -> Vec<String> {
     include_str!("ch01.txt").lines().map(|line| line.to_string()).collect()
 }
 
@@ -12,7 +12,7 @@ fn last_digit(s: &str) -> Option<char> {
 
 
 fn ch01_1() -> i32 {
-    get_data_01_1()
+    get_data()
         .iter()
         .map(|s| {
             format!(
@@ -63,7 +63,7 @@ fn last_number(s: &str) -> Option<i32> {
 }
 
 fn ch01_2() -> i32 {
-    get_data_01_1()
+    get_data()
         .iter()
         .map(|s| {
             let first = first_number(s).unwrap();
