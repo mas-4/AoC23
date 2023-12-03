@@ -24,8 +24,8 @@ fn ch01_1() -> i32 {
 }
 
 
-fn get_list_of_number_words() -> Vec<&'static str> {
-    vec!["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+fn get_list_of_number_words() -> [&'static str; 10]{
+    ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
 }
 
 fn first_number(s: &str) -> Option<i32> {
