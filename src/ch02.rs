@@ -33,6 +33,23 @@ impl MarbleSet {
     fn contains(&self, other: &MarbleSet) -> bool {
         self.red <= other.red && self.green <= other.green && self.blue <= other.blue
     }
+
+    fn swallow(&mut self, other: &MarbleSet) {
+        if self.red < other.red {
+            self.red = other.red;
+        }
+        if self.green < other.green {
+            self.green = other.green;
+        }
+        if self.blue < other.blue {
+            self.blue = other.blue;
+        }
+
+    }
+
+    fn power(&self) -> i32 {
+        self.red * self.green * self.blue
+    }
 }
 
 struct Game {
@@ -55,7 +72,14 @@ impl Game {
             .map(|s| MarbleSet::parse(s).unwrap())
             .collect();
         Ok(Game { game_id, sets })
+    }
 
+    fn min_marble_set(&self) -> MarbleSet {
+        let mut set = MarbleSet { red: 0, green: 0, blue: 0};
+        for marbles in &self.sets {
+            set.swallow(marbles);
+        }
+        set
     }
 }
 
@@ -75,7 +99,10 @@ fn ch02_1() -> i32 {
 }
 
 fn ch02_2() -> i32 {
-    22
+    get_data()
+        .iter()
+        .map(|s| Game::parse(s).unwrap().min_marble_set().power())
+        .sum()
 }
 
 pub fn ch02() {
