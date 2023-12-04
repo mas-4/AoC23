@@ -13,7 +13,8 @@ struct Span {
 }
 
 impl Span {
-    fn check_row(&self, row: i32, schematic: &Vec<String>) -> bool {
+    fn check_row(&self, row: i32, schematic: &Vec<String>, validator: fn(c: char) -> bool) -> bool {
+        // Checks that a given row based on our span has a character that qualifies as valid for the callback
         if row < 0 || row as usize >= schematic.len() {
             return false;
         }
@@ -25,7 +26,7 @@ impl Span {
                 start, &schematic[row as usize], self.contents
             );
             let c = schematic[row as usize].chars().nth(i as usize).expect(&msg);
-            if !c.is_alphanumeric() && c != '.' {
+            if validator(c) {
                 return true;
             }
         }
@@ -33,9 +34,10 @@ impl Span {
     }
 
     fn touches_symbol(&self, schematic: &Vec<String>) -> bool {
-        self.check_row(self.row as i32 - 1, schematic)
-            || self.check_row(self.row as i32 + 1, schematic)
-            || self.check_row(self.row as i32, schematic)
+        let closure = |c: char| !c.is_alphanumeric() && c != '.';
+        self.check_row(self.row as i32 - 1, schematic, closure)
+            || self.check_row(self.row as i32 + 1, schematic, closure)
+            || self.check_row(self.row as i32, schematic, closure)
     }
 }
 
