@@ -33,11 +33,14 @@ impl Span {
         false
     }
 
-    fn touches_symbol(&self, schematic: &Vec<String>) -> bool {
-        let closure = |c: char| !c.is_alphanumeric() && c != '.';
+    fn touches_closure(&self, schematic: &Vec<String>, closure: fn(c: char) -> bool) -> bool {
         self.check_row(self.row as i32 - 1, schematic, closure)
             || self.check_row(self.row as i32 + 1, schematic, closure)
             || self.check_row(self.row as i32, schematic, closure)
+    }
+
+    fn gear_ratio(&self) -> i32 {
+        2
     }
 }
 
@@ -59,7 +62,8 @@ fn ch03_1() -> i32 {
                 contents: num_str,
             };
             j = n.end;
-            total += if n.touches_symbol(&data) {
+            let closure = |c: char| !c.is_alphanumeric() && c != '.';
+            total += if n.touches_closure(&data, closure) {
                 n.contents.parse().expect("Bad number!")
             } else {
                 0
@@ -70,7 +74,28 @@ fn ch03_1() -> i32 {
 }
 
 fn ch03_2() -> i32 {
-    0
+    let data = get_data();
+    let mut total = 0;
+    for (i, row) in data.iter().enumerate() {
+        let mut j = 0;
+        while let Some(pos) = row[j..].chars().position(|c| c == '*') {
+            j += pos;
+            let n = Span {
+                row: i,
+                start: j,
+                end: j + 1,
+                contents: "*".to_string(),
+            };
+            j += 1;
+            let closure = |c: char| c.is_numeric();
+            total += if n.touches_closure(&data, closure) {
+                n.gear_ratio()
+            } else {
+                0
+            }
+        }
+    }
+    total
 }
 
 pub fn ch03() {
