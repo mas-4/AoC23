@@ -5,6 +5,7 @@ fn get_data() -> Vec<String> {
         .collect()
 }
 
+#[derive(Debug)]
 struct Span {
     row: usize,
     start: usize,
@@ -79,8 +80,8 @@ impl Span {
         let j0 = (self.start as i32 - 1).max(0);
         let j1 = (self.end as i32 + 1).min(schematic[0].len() as i32 - 1);
 
-        for i in i0..i1 {
-            for j in j0..j1 {
+        for i in i0..i1+1 {
+            for j in j0..j1+1 {
                 let c = schematic[i as usize].chars().nth(j as usize).expect("Bad char");
                 if c.is_numeric() {
                     let num = Span::get_num(schematic, i, j);
@@ -90,13 +91,14 @@ impl Span {
                     }
                     nums.push(num);
                 }
-                if nums.len() == 2 {
-                    println!("nums: {:?}", nums);
-                    return nums[0] * nums[1]
-                }
             }
         }
-        0
+        if nums.len() == 2 {
+            nums[0] * nums[1]
+        } else {
+            0
+        }
+
     }
 }
 
@@ -136,19 +138,9 @@ fn ch03_2() -> i32 {
         let mut j = 0;
         while let Some(pos) = row[j..].chars().position(|c| c == '*') {
             j += pos;
-            let n = Span {
-                row: i,
-                start: j,
-                end: j + 1,
-                contents: "*".to_string(),
-            };
+            let n = Span { row: i, start: j, end: j, contents: "*".to_string(), };
             j += 1;
-            let closure = |c: char| c.is_numeric();
-            total += if n.touches_closure(&data, closure) {
-                n.gear_ratio(&data)
-            } else {
-                0
-            }
+            total += n.gear_ratio(&data);
         }
     }
     total
