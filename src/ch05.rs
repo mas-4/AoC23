@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+
 fn get_data() -> Almanac {
-    let lines = include_str!("ch05test.txt")
+    let lines = include_str!("ch05.txt")
         .lines()
         .map(|line| line.to_string())
         .collect::<Vec<String>>();
@@ -13,7 +15,8 @@ fn get_data() -> Almanac {
 
     let mut source = String::new();
     let mut destination = String::new();
-    let mut maps = Vec::new();
+    let mut maps = HashMap::new();
+    let mut map_order = Vec::new();
     for line in lines.iter().skip(2) {
         if line.trim() == "" {
             continue;
@@ -26,46 +29,78 @@ fn get_data() -> Almanac {
                 .split('-')
                 .collect::<Vec<&str>>()[2]
                 .to_string();
+            maps.insert(source.clone(), Vec::new());
+            map_order.push(source.clone());
         } else {
-            maps.push(Map::new(source.clone(), destination.clone(), line));
+            // Insert a new map into the vector
+            maps.get_mut(&source).expect("No source!").push(Map::new(line));
         }
     }
-    Almanac { maps, seeds }
+    Almanac {
+        maps,
+        map_order,
+        seeds,
+    }
 }
 
 struct Almanac {
-    maps: Vec<Map>,
+    maps: HashMap<String, Vec<Map>>,
+    map_order: Vec<String>,
     seeds: Vec<usize>,
 }
 
+impl Almanac {
+    fn feed_forward(&self, seed: usize) -> usize {
+        let mut result = seed;
+        for map in self.map_order.iter() {
+            for m in self.maps.get(map).expect("No map!") {
+                if m.contains(result) {
+                    result = m.translate(result);
+                    break;
+                }
+            }
+        }
+        result
+    }
+}
+
 struct Map {
-    source: String,
-    destination: String,
     source_start: usize,
     destination_start: usize,
     range: usize,
 }
 
 impl Map {
-    fn new(source: String, destination: String, line: &String) -> Map {
+    fn new(line: &String) -> Map {
         let nums: Vec<usize> = line
             .split_whitespace()
             .map(|n| n.parse::<usize>().expect("bad integer"))
             .collect();
-        println!("{:?}", nums);
         Map {
-            source,
-            destination,
-            source_start: nums[0],
-            destination_start: nums[1],
+            source_start: nums[1],
+            destination_start: nums[0],
             range: nums[2],
         }
     }
+
+    fn contains(&self, n: usize) -> bool {
+        n >= self.source_start && n < self.source_start + self.range
+    }
+    fn translate(&self, n: usize) -> usize {
+        n - self.source_start + self.destination_start
+    }
+
+
 }
 
 fn ch05_1() -> usize {
-    let almanacs = get_data();
-    0
+    let almanac = get_data();
+    almanac
+        .seeds
+        .iter()
+        .map(|seed| almanac.feed_forward(*seed))
+        .min()
+        .expect("No minimum!")
 }
 
 fn ch05_2() -> usize {
