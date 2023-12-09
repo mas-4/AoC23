@@ -14,7 +14,6 @@ fn get_data() -> Almanac {
         .collect();
 
     let mut source = String::new();
-    let mut destination = String::new();
     let mut maps = HashMap::new();
     let mut map_order = Vec::new();
     for line in lines.iter().skip(2) {
@@ -22,13 +21,6 @@ fn get_data() -> Almanac {
             continue;
         } else if line.chars().next().expect("No string!").is_alphabetic() {
             source = line.split('-').collect::<Vec<&str>>()[0].to_string();
-            destination = line
-                .split_whitespace()
-                .next()
-                .unwrap_or("")
-                .split('-')
-                .collect::<Vec<&str>>()[2]
-                .to_string();
             maps.insert(source.clone(), Vec::new());
             map_order.push(source.clone());
         } else {
