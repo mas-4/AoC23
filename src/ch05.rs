@@ -1,3 +1,6 @@
+use std::time::Instant;
+use std::sync::Arc;
+
 fn get_data() -> Almanac {
     let lines = include_str!("ch05.txt")
         .lines()
@@ -42,24 +45,11 @@ fn parse_map_title(line: &String) ->  (String, String) {
 }
 
 
-#[derive(Debug)]
+#[derive(Clone)]
 struct Almanac {
     maps: Vec<Map>,
     seeds: Vec<usize>,
 }
-#[derive(Debug)]
-struct Map {
-    source: String,
-    destination: String,
-    translations: Vec<Translation>,
-}
-#[derive(Debug)]
-struct Translation {
-    source_start: usize,
-    destination_start: usize,
-    range: usize,
-}
-
 
 impl Almanac {
     fn feed_forward(&self, seed: usize) -> usize {
@@ -71,14 +61,23 @@ impl Almanac {
     }
 }
 
+#[allow(dead_code)]
+#[derive(Clone)]
+struct Map {
+    source: String,
+    destination: String,
+    translations: Vec<Translation>,
+}
+
 impl Map {
     fn new(lines: &Vec<&String>) -> Map {
         let (source, destination) = parse_map_title(lines[0]);
-        let translations = lines
+        let mut translations: Vec<Translation> = lines
             .iter()
             .skip(1)
             .map(|line| Translation::new(line))
-            .collect();
+            .collect::<Vec<Translation>>();
+        translations.sort_by(|a, b| a.destination_start.cmp(&b.destination_start));
         Map {
             source,
             destination,
@@ -94,6 +93,13 @@ impl Map {
         }
         n
     }
+}
+
+#[derive(Clone)]
+struct Translation {
+    source_start: usize,
+    destination_start: usize,
+    range: usize,
 }
 
 impl Translation {
@@ -119,9 +125,6 @@ impl Translation {
 
 fn ch05_1() -> usize {
     let almanac = get_data();
-    for map in almanac.maps.iter() {
-        println!("{:?}", map.source);
-    }
     almanac
         .seeds
         .iter()
@@ -130,14 +133,49 @@ fn ch05_1() -> usize {
         .expect("No minimum!")
 }
 
+#[derive(Clone)]
+struct SeedSet {
+    start: usize,
+    range: usize,
+}
+
+fn find_lowest_location(seeds: &SeedSet, almanac: &Almanac) -> usize {
+    let mut result = usize::MAX;
+    for seed in seeds.start..=seeds.start + seeds.range {
+        let location = almanac.feed_forward(seed);
+        if location < result {
+            result = location;
+        }
+    }
+    result
+}
+
 fn ch05_2() -> usize {
-    let almanac = get_data();
-    let seed_pairs = almanac
+    let start_time = Instant::now();
+    let almanac = Arc::new(get_data());
+    let seeds: Vec<SeedSet> = almanac
         .seeds
-        .chunks(2);
-    3
+        .chunks(2)
+        .map(|chunk| SeedSet { start: chunk[0], range: chunk[1], })
+        .collect();
 
-
+    let mut threads = Vec::new();
+    for seedset in seeds.iter() {
+        let almanac = Arc::clone(&almanac);
+        let seedset = seedset.clone();
+        // spawn a thread for each seedset
+        threads.push(std::thread::spawn(move || {
+            find_lowest_location(&seedset, &almanac)
+        }));
+    }
+    // wait for thread completion
+    let mut results = Vec::new();
+    for thread in threads {
+        results.push(thread.join().unwrap());
+    }
+    let elapsed = start_time.elapsed();
+    println!("Elapsed: {:?}", elapsed);
+    *results.iter().min().unwrap()
 }
 
 pub fn ch05() {
