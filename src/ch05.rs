@@ -180,5 +180,6 @@ fn ch05_2() -> usize {
 
 pub fn ch05() {
     println!("05-1: {}", ch05_1());
-    println!("05-2: {}", ch05_2());
+//    println!("05-2: {}", ch05_2());
+    println!("05-2: disabled due to time constraints");
 }
